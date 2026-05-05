@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Find Your Film</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: radial-gradient(circle at top, #056aa2, #000);
+  color: #fff;
+  text-align: center;
+}
+
+/* Neon Glow */
+h1, h2 {
+  color: #0ff;
+  text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+}
+
+button {
+  padding: 12px 20px;
+  background: transparent;
+  border: 2px solid #0ff;
+  color: #0ff;
+  cursor: pointer;
+  border-radius: 5px;
+  box-shadow: 0 0 10px #0ff;
+}
+
+button:hover {
+  background: #0ff;
+  color: #000;
+}
+
+select {
+  padding: 10px;
+  margin: 10px;
+  border-radius: 5px;
+  background: #111;
+  color: #0ff;
+  border: 1px solid #0ff;
+}
+
+/* Sections */
+#home {
+  padding: 100px 20px;
+}
+
+#explore {
+  display: none;
+  padding: 20px;
+}
+
+/* Movie Grid */
+#results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Movie Card */
+.movie-card {
+  background: #111;
+  border: 1px solid #0ff;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 0 10px #0ff;
+}
+
+.movie-card img {
+  width: 100%;
+  border-radius: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HOME -->
+<div id="home">
+  <h1>🎬 Find Your Film</h1>
+  <button onclick="openExplore()">Explore</button>
+</div>
+
+<!-- EXPLORE -->
+<div id="explore">
+  <h2>Select Your Preferences</h2>
+
+  <select id="genre">
+    <option value="action">Action</option>
+    <option value="comedy">Comedy</option>
+    <option value="horror">Horror</option>
+  </select>
+
+  <select id="type">
+    <option value="movie">Movie</option>
+    <option value="series">Series</option>
+  </select>
+
+  <select id="language">
+    <option value="en">English</option>
+    <option value="hi">Hindi</option>
+    <option value="ko">Korean</option>
+  </select>
+
+  <br>
+
+  <button onclick="getMovies()">Get Recommendations</button>
+
+  <div id="results"></div>
+</div>
+
+<script>
+
+function openExplore() {
+  document.getElementById("home").style.display = "none";
+  document.getElementById("explore").style.display = "block";
+}
+
+const moviesDB = [
+// ENGLISH ACTION MOVIES
+  {title:"Avengers", genre:"action", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg"},
+  {title:"Mad Max", genre:"action", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/8tZYtuWezp8JbcsvHYO0O46tFbo.jpg"},
+  {title:"John Wick", genre:"action", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/fZPSd91yGE9fCcCe6OoQr6E3Bev.jpg"},
+  {title:"Batman", genre:"action", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg"},
+  {title:"Gladiator", genre:"action", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/ty8TGRuvJLPUmAR1H1nRIsgwvim.jpg"},
+  {title:"Matrix", genre:"action", type:"movie", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BN2NmN2VhMTQtMDNiOS00NDlhLTliMjgtODE2ZTY0ODQyNDRhXkEyXkFqcGc@._V1_.jpg"},
+  {title:"Fast & Furious", genre:"action", type:"movie", lang:"en", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT26cCz4laFQinmeRZIyUj2rC-QUheFbYyhtg&s"},
+  {title:"Mission Impossible", genre:"action", type:"movie", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BN2U4OTdmM2QtZTkxYy00ZmQyLTg2N2UtMDdmMGJmNDhlZDU1XkEyXkFqcGc@._V1_.jpg"},
+  {title:"Tenet", genre:"action", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/k68nPLbIST6NP96JmTxmZijEvCA.jpg"},
+  {title:"Extraction", genre:"action", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/wlfDxbGEsW58vGhFljKkcR5IxDj.jpg"},
+
+// ENGLISH ACTION SERIES
+{title:"Vikings", genre:"action", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/bQLrHIRNEkE3PdIWQrZHynQZazu.jpg"},
+{title:"Reacher", genre:"action", type:"series", lang:"en", img:"https://m.media-amazon.com/images/I/71t5Lvtt-6L._AC_UF1000,1000_QL80_.jpg"},
+{title:"The Recruit", genre:"action", type:"series", lang:"en", img:"https://resizing.flixster.com/0yVKB0rTrMitXx-_bAvT-MiFJRk=/ems.cHJkLWVtcy1hc3NldHMvdHZzZWFzb24vNDBlODBlOTktOGRmYS00MDkwLWI5NTUtODBmZTYxZDI1NmE2LmpwZw=="},
+{title:"Altered Carbon", genre:"action", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/8s4h9friP6Ci3adRGahHARVd76E.jpg"},
+{title:"The Sandman", genre:"action", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/q54qEgagGOYCq5D1903eBVMNkbo.jpg"},
+{title:"Devil May Cry", genre:"action", type:"series", lang:"en", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGq_9N6OOU-cD99EW7OaIxLWpfaaPeLkjVBw&s"},
+{title:"Outer Banks", genre:"action", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/ovDgO2LPfwdVRfvScAqo9aMiIW.jpg"},
+{title:"Outlander", genre:"action", type:"series", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BMTc4M2JmYmEtMjJhOC00MmRlLThhZDEtMWRhZTZiNTI0ZDZhXkEyXkFqcGc@._V1_.jpg"},
+{title:"Cobra Kai", genre:"action", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/6GDW4EsgsXlYrL1ASb5eCHQK4er.jpg"},
+{title:"Resident Evil", genre:"action", type:"series", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BNzg0OWYwOTMtYjVhNy00NzY0LWJiYTMtMGQ3OTczMmEwZmVhXkEyXkFqcGc@._V1_.jpg"},
+
+// ENGLISH COMEDY MOVIES
+{title:"The Hangover", genre:"comedy", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/uluhlXubGu1VxU63X9VHCLWDAYP.jpg"},
+{title:"Superbad", genre:"comedy", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/ek8e8txUyUwd2BNqj6lFEerJfbq.jpg"},
+{title:"Step Brothers", genre:"comedy", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg"},
+{title:"Mean Girls", genre:"comedy", type:"movie", lang:"en", img:"https://upload.wikimedia.org/wikipedia/en/0/06/Mean_girls_2024_poster.jpg"},
+{title:"Deadpool", genre:"comedy", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/3E53WEZJqP6aM84D8CckXx4pIHw.jpg"},
+{title:"The Mask", genre:"comedy", type:"movie", lang:"en", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSpgF3xtArwOf5k2B20IWrF-bbNoib7Z1jvXw&s"},
+{title:"Home Alone", genre:"comedy", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/9wSbe4CwObACCQvaUVhWQyLR5Vz.jpg"},
+{title:"Johnny English", genre:"comedy", type:"movie", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BMmNlZDRlODAtNzE1Zi00NjUzLThiZWQtOTk1ZTFjMjRhMjg5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+{title:"Bruce Almighty", genre:"comedy", type:"movie", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BZWM2ZjA2OTctZmRhMy00ZDIzLTkwZGQtYTRlNmQwZWZmMDBlXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+{title:"Rush Hour", genre:"comedy", type:"movie", lang:"en", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTNlqYB8ZKNftZ8U3biFoUQuWGfMQ_OV5z9A&s"},
+
+// ENGLISH COMEDY SERIES
+{title:"Friends", genre:"comedy", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/f496cm9enuEsZkSPzCwnTESEK5s.jpg"},
+{title:"The Office", genre:"comedy", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/7DJKHzAi83BmQrWLrYYOqcoKfhR.jpg"},
+{title:"Brooklyn Nine-Nine", genre:"comedy", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/hgRMSOt7a1b8qyQR68vUixJPang.jpg"},
+{title:"How I Met Your Mother", genre:"comedy", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/b34jPzmB0wZy7EjUZoleXOl2RRI.jpg"},
+{title:"The Big Bang Theory", genre:"comedy", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg"},
+{title:"Modern Family", genre:"comedy", type:"series", lang:"en", img:"https://m.media-amazon.com/images/I/81YzGusG3cL._AC_UF1000,1000_QL80_.jpg"},
+{title:"Parks and Recreation", genre:"comedy", type:"series", lang:"en", img:"https://m.media-amazon.com/images/S/pv-target-images/5c3de1755885a10a10d5e51de20056a62f67da6fe719a2c115919550a1702e46.jpg"},
+{title:"Two and a Half Men", genre:"comedy", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/A9QDK4OWpv41W27kCv0LXe30k9S.jpg"},
+{title:"Arrested Development", genre:"comedy", type:"series", lang:"en", img:"https://m.media-amazon.com/images/I/81oC5pmURJL._AC_UF1000,1000_QL80_.jpg"},
+{title:"Ted Lasso", genre:"comedy", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/5fhZdwP1DVJ0FyVH6vrFdHwpXIn.jpg"},
+
+// ENGLISH HORROR MOVIES
+  {title:"The Conjuring", genre:"horror", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/wVYREutTvI2tmxr6ujrHT704wGF.jpg"},
+  {title:"Insidious", genre:"horror", type:"movie", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BMTYyOTAxMDA0OF5BMl5BanBnXkFtZTcwNzgwNTc1NA@@._V1_FMjpg_UX1000_.jpg"},
+  {title:"The Nun", genre:"horror", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/sFC1ElvoKGdHJIWRpNB3xWJ9lJA.jpg"},
+  {title:"It", genre:"horror", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/9E2y5Q7WlCVNEhP5GiVTjhEhx1o.jpg"},
+  {title:"A Quiet Place", genre:"horror", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/nAU74GmpUk7t5iklEp3bufwDq4n.jpg"},
+  {title:"Hereditary", genre:"horror", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/lHV8HHlhwNup2VbpiACtlKzaGIQ.jpg"},
+  {title:"The Exorcist", genre:"horror", type:"movie", lang:"en", img:"https://image.tmdb.org/t/p/w500/4ucLGcXVVSVnsfkGtbLY4XAius8.jpg"},
+  {title:"Annabelle", genre:"horror", type:"movie", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BNjkyMDU5ZWQtZDhkOC00ZWFjLWIyM2MtZWFhMDUzNjdlNzU2XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"The Ring", genre:"horror", type:"movie", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BYjUzYzhjNjQtOWEyMS00NjlkLWFiNDEtNGZiM2Y5Y2I2MzhiXkEyXkFqcGc@._V1_.jpg"},
+  {title:"Sinister", genre:"horror", type:"movie", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BMjI5MTg1Njg0Ml5BMl5BanBnXkFtZTcwNzg2Mjc4Nw@@._V1_QL75_UX140_CR0,0,140,207_.jpg"},
+
+// ENGLISH HORROR SERIES
+  {title:"The Haunting of Hill House", genre:"horror", type:"series", lang:"en", img:"https://m.media-amazon.com/images/I/91UiNfaICaS._AC_UF894,1000_QL80_.jpg"},
+  {title:"The Haunting of Bly Manor", genre:"horror", type:"series", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BYTkwYzExODYtYmI2OS00MmM1LWI5M2MtNzYyOTIxMmI1NTc5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"American Horror Story", genre:"horror", type:"series", lang:"en", img:"https://m.media-amazon.com/images/S/pv-target-images/d9c0125c003cf73ef641e583d8bd44217dfb1779a38168c45da2af0b17239881.jpg"},
+  {title:"Stranger Things", genre:"horror", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg"},
+  {title:"The Walking Dead", genre:"horror", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/w500/rqeYMLryjcawh2JeRpCVUDXYM5b.jpg"},
+  {title:"Midnight Mass", genre:"horror", type:"series", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BYWFjMDM5MzgtZWI3OC00ZWRmLThlNTktN2ZkMTc3ZTA5NGEzXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"Penny Dreadful", genre:"horror", type:"series", lang:"en", img:"https://m.media-amazon.com/images/M/MV5BZjkxMDAzMDgtNzFhNS00MjJkLWI5NTctZGRjODg3MzRiOWEzXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"From", genre:"horror", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/original/ps46NdLlH70ptDD8ailTL8TCZU3.jpg"},
+  {title:"Channel Zero", genre:"horror", type:"series", lang:"en", img:"https://static0.colliderimages.com/wordpress/wp-content/uploads/sharedimages/2024/04/channel-zero-series-collection-poster.jpg?q=49&fit=contain&w=480&dpr=2"},
+  {title:"The Terror", genre:"horror", type:"series", lang:"en", img:"https://image.tmdb.org/t/p/original/eoxvAUG5hbqon869PXuFhvR1LOu.jpg"},
+
+// ENGLISH ROMANCE SERIES
+  {title:"The Notebook", genre:"romance", type:"movies", lang:"en", img:"https://i5.walmartimages.com/seo/The-Notebook-Movie-Poster-11-x-17_5d1b11af-3e8b-470b-8f0a-3c55b5a4cd75.0f591bb30c5e225ba46718ba252d04"},
+
+// HINDI ACTION MOVIES
+{title:"War", genre:"action", type:"movie", lang:"hi", img:"https://m.media-amazon.com/images/S/pv-target-images/5a6414a52fa4d1a9ebff7ba6ad24a5153f859cf2362548e9db6a13e4453cae67.jpg"},
+  {title:"Pathaan", genre:"action", type:"movie", lang:"hi", img:"https://i.ytimg.com/vi/-rMvyYMnK3c/maxresdefault.jpg"},
+  {title:"Dhoom 3", genre:"action", type:"movie", lang:"hi", img:"https://i.ytimg.com/vi/74AM_c4PwM4/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLCXBP4eaLDG3SwZamKcW4J8lxcppA"},
+  {title:"Bang Bang!", genre:"action", type:"movie", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFMkenbg-osYKB28Cp-9Tj0xNHJyOX8PnAiA&s"},
+  {title:"Krrish", genre:"action", type:"movie", lang:"hi", img:"https://i.ytimg.com/vi/yj4bnTrqwvA/maxresdefault.jpg"},
+  {title:"Singham", genre:"action", type:"movie", lang:"hi", img:"https://m.media-amazon.com/images/I/51yfUACbwkL._AC_UF1000,1000_QL80_.jpg"},
+  {title:"Kick", genre:"action", type:"movie", lang:"hi", img:"https://i.ytimg.com/vi/8g2n7JSp-iI/hqdefault.jpg"},
+  {title:"Baaghi", genre:"action", type:"movie", lang:"hi", img:"https://c.saavncdn.com/944/Baaghi-Hindi-2016-20220420171003-500x500.jpg"},
+  {title:"Agneepath", genre:"action", type:"movie", lang:"hi", img:"https://i.ytimg.com/vi/o_ZB8rTmj0k/maxresdefault.jpg"},
+  {title:"Don", genre:"action", type:"movie", lang:"hi", img:"https://m.media-amazon.com/images/I/81sqKEgS38L.jpg"},
+
+// HINDI ACTION SERIES
+{title:"Sacred Games", genre:"action", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BNjcwODg2YjktNzlhNy00YzQ3LThhZmMtMDNlZjY3ZDBjNTMwXkEyXkFqcGc@._V1_.jpg"},
+  {title:"Mirzapur", genre:"action", type:"series", lang:"hi", img:"https://images.news18.com/ibnkhabar/uploads/2023/04/Top-20-best-Indian-Web-Series-14.jpg"},
+  {title:"The Family Man", genre:"action", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/S/pv-target-images/488a8072411589c079a6eabbe54852ec185954bc40a7ba4fd81772ca56ca324a.jpg"},
+  {title:"Special OPS", genre:"action", type:"series", lang:"hi", img:"https://upload.wikimedia.org/wikipedia/en/8/83/Special_OPS_Poster.jpeg"},
+  {title:"Paatal Lok", genre:"action", type:"series", lang:"hi", img:"https://images.moneycontrol.com/static-mcnews/2024/12/20241223075917_image-2024-12-23T132859.712.jpg?impolicy=website&width=1600&height=900"},
+  {title:"Rangbaaz", genre:"action", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BMGJhNjVkNzYtOTlhMi00MGNkLTkxMzEtMTA3OGUwNTljMWMyXkEyXkFqcGc@._V1_.jpg"},
+  {title:"Bard of Blood", genre:"action", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BYWFkODUyOTgtMTExYi00MmYxLTk5ZmItYmU5YzcyN2YyZDMwXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"Delhi Crime", genre:"action", type:"series", lang:"hi", img:"https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p16527010_b_v13_ab.jpg"},
+  {title:"Aarya", genre:"action", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BZGQ3OGQ2ZjktODhlMy00YTg2LWIxOTEtYzI5Mjg3MGNkMDQzXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"Farzi", genre:"action", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BNDY2OWMxNzgtZGQ4Ny00ODI3LTk3MTAtYjM4N2U4ZGI3ZGY1XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+
+// HINDI COMEDY MOVIES
+{title:"3 Idiots", genre:"comedy", type:"movie", lang:"hi", img:"https://image.tmdb.org/t/p/w500/66A9MqXOyVFCssoloscw79z8Tew.jpg"},
+  {title:"Hera Pheri", genre:"comedy", type:"movie", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWnMQXAl_UQnpKE2Gafhp11hJ88MiZjKnJFw&s"},
+  {title:"Phir Hera Pheri", genre:"comedy", type:"movie", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BMTNkZTExMWYtMGZjMy00NGUwLWJmMWEtOThjYmZjY2Q0N2M5XkEyXkFqcGc@._V1_.jpg"},
+  {title:"Andaz Apna Apna", genre:"comedy", type:"movie", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQ7V_e5SaETs04c71oTgZupLekDTfjjYQEsg&s"},
+  {title:"Golmaal: Fun Unlimited", genre:"comedy", type:"movie", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BZWMwZTM3YzEtNzgzMi00YmI3LTkxN2EtZDY1OGM0MDQ2Y2NkXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"Welcome", genre:"comedy", type:"movie", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcReR7Hxo10sLjXgES-nGUsxQn1SI5uXB1soag&s"},
+  {title:"Chup Chup Ke", genre:"comedy", type:"movie", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BMTg3MTMzNjUwOF5BMl5BanBnXkFtZTcwODgxODMzMQ@@._V1_FMjpg_UX1000_.jpg"},
+  {title:"Bhool Bhulaiyaa", genre:"comedy", type:"movie", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhVwVSqkoIP7jEDUea60lKcpXKVLWFGI4cUw&s"},
+  {title:"Housefull", genre:"comedy", type:"movie", lang:"hi", img:"https://m.media-amazon.com/images/I/610r6un1vnL._AC_UF894,1000_QL80_.jpg"},
+  {title:"Dhamaal", genre:"comedy", type:"movie", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BZWU3OTEzODgtMWY4OS00N2NkLWJlNGQtMWZhZDJmODQwN2E5XkEyXkFqcGc@._V1_.jpg"},
+
+// HINDI COMEDY SERIES
+  {title:"Panchayat", genre:"comedy", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/S/pv-target-images/33778e784a32d1e80d6d24935527ef009b2a3c9256a911de2707e26ccb13c7bc.png"},
+  {title:"Gullak", genre:"comedy", type:"series", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ79D8VjaBaj9BkC1QL6uE8SvXzj1gy92Zfrw&s"},
+  {title:"TVF Pitchers", genre:"comedy", type:"series", lang:"hi", img:"https://media-cache.cinematerial.com/p/500x/vy1cnqkf/tvf-pitchers-indian-movie-poster.jpg?v=1673114502"},
+  {title:"Permanent Roommates", genre:"comedy", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BNTk5YmI4MmUtYWY1My00NWQ0LTk0M2ItOTQ3NWI0NGU1MWIyXkEyXkFqcGc@._V1_.jpg"},
+  {title:"Chacha Vidhayak Hain Humare", genre:"comedy", type:"series", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1QOEG36Co6RhxuRWsZ2f8yJu1zBR5k2TncA&s"},
+  {title:"Aspirants", genre:"comedy", type:"series", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQMCJ04dA5X-8MrDeuy9o2eBBLGUMYxh0PzQ&s"},
+  {title:"Baked", genre:"comedy", type:"series", lang:"hi", img:"https://xstreamcp-assets-msp.streamready.in/assets/HOTSTAR_DTH/SERIES/690e0758254eef7bb381b6c0/images/PORTRAIT/1735639420355-v"},
+  {title:"Bang Baaja Baaraat", genre:"comedy", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/S/pv-target-images/82bfe119f2fcf62cd5949fdccb18ca343d6753466dda93d854f941dbe13330df.jpg"},
+  {title:"What The Folks", genre:"comedy", type:"series", lang:"hi", img:"https://images.justwatch.com/poster/193113047/s332/season-2.jpg"},
+  {title:"Humorously Yours", genre:"comedy", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BMTU3NzA5MTk5NF5BMl5BanBnXkFtZTgwOTEzMTg4MDI@._V1_.jpg"},
+
+// HINDI HORROR MOVIES
+{title:"Tumbbad", genre:"horror", type:"movie", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTc-A6q4P0dytwtAY5yfMCWjZZx0jG9oQeX1w&s"},
+  {title:"Stree", genre:"horror", type:"movie", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BMjAxODFjMWUtOGQ5Zi00YWMyLWFlMjYtNWRkY2M5Y2Y0ZmRkXkEyXkFqcGc@._V1_.jpg"},
+  {title:"Bhool Bhulaiyaa", genre:"horror", type:"movie", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhVwVSqkoIP7jEDUea60lKcpXKVLWFGI4cUw&s"},
+  {title:"Raaz", genre:"horror", type:"movie", lang:"hi", img:"https://images1.livehindustan.com/uploadimage/library/2021/12/05/16_9/16_9_1/raaz_the_mystery_continues_1638711926.jpg"},
+  {title:"1920", genre:"horror", type:"movie", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRl9qW-8qoSLV1LV1Q1etrM0n1dVau2qTMfZQ&s"},
+  {title:"Pari", genre:"horror", type:"movie", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStbXgIJWzkz7t9wcJXOFcifFFeZ2P5kpDGNQ&s"},
+  {title:"Bhoot", genre:"horror", type:"movie", lang:"hi", img:"https://i.ytimg.com/vi/PxNY2QY8wCs/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLDsXDRjGzSTb1MG5fOhHDznokVyGg"},
+  {title:"Ragini MMS", genre:"horror", type:"movie", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BYmUyY2QxNjYtMjg3ZC00M2Q1LTlhZDItMWYyNjhmOTBhMzljXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"Haunted - 3D", genre:"horror", type:"movie", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3M8Vl-5jn41cOl8teVP66ROF9aePcs_VLug&s"},
+  {title:"Ek Thi Daayan", genre:"horror", type:"movie", lang:"hi", img:"https://images.jdmagicbox.com/comp/jd_social/news/2018jul28/image-164067-l2ntz5o36y.jpg"},
+
+// HINDI HORROR SERIES
+{title:"Typewriter", genre:"horror", type:"series", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQzehWbsbRHCaIuTbekbq7jv9aYqAUzTc382w&s"},
+  {title:"Ghoul", genre:"horror", type:"series", lang:"hi", img:"https://images.news18.com/ibnkhabar/uploads/2022/07/Ghoul.jpg"},
+  {title:"Betaal", genre:"horror", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BYTZjZjJiNmItYWVlZC00ZDY5LWI3ZDMtMzU4N2UzODdlMzBkXkEyXkFqcGc@._V1_.jpg"},
+  {title:"Bhram", genre:"horror", type:"series", lang:"hi", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRNoQMqM-Om_CiHmT7jo1nzVVk5n9HNSjjBgw&s"},
+  {title:"Tantra", genre:"horror", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/S/pv-target-images/546625b47db9a23f1033ff7c450495096cbeaf8bda560fce860aa6b996e7fba4.jpg"},
+  {title:"Kaun Hai?", genre:"horror", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/S/pv-target-images/82c818fa25076be0124da5ce146286ee3bbaf501d7f6a95b26fbe00f920d804e.jpg"},
+  {title:"Fear Files", genre:"horror", type:"series", lang:"hi", img:"https://i.ytimg.com/vi/PuMANxgaOu0/hqdefault.jpg"},
+  {title:"Aahat", genre:"horror", type:"series", lang:"hi", img:"https://i.ytimg.com/vi/bnCjqZ5oolg/maxresdefault.jpg"},
+  {title:"Anamika", genre:"horror", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BYmY0NWYwYWItZWNmNy00MTljLThjNWEtYjQxMTM0ZTEyMzlhXkEyXkFqcGc@._V1_.jpg"},
+  {title:"Shaitaan Haveli", genre:"horror", type:"series", lang:"hi", img:"https://m.media-amazon.com/images/M/MV5BMzE1OThlOWYtM2E5OC00Y2JjLWIzNjgtOWMwZGYxMWNjNWMzXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+
+// KOREAN ACTION MOVIES 
+{title:"Train to Busan", genre:"action", type:"movie", lang:"ko", img:"https://image.tmdb.org/t/p/original/t8RfxLtdmuscLgfwWxnm8xx4Ary.jpg"},
+  {title:"The Man from Nowhere", genre:"action", type:"movie", lang:"ko", img:"https://resizing.flixster.com/KveVNmY2WqPr1U_qnhFgMfmHCxU=/ems.cHJkLWVtcy1hc3NldHMvbW92aWVzLzViZDIzOWJlLWQxOTYtNGQwMy05MzQ1LWIyNDU3ZjEzODUyYi5qcGc="},
+  {title:"Veteran", genre:"action", type:"movie", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9fU87OwLqepDJkcxQXt7WMaxF9o4dVnyMbw&s"},
+  {title:"The Outlaws", genre:"action", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/7b47e74dfadf7571a1af0d8de4a42fb7ecbc93ffa01726acdf9bd50350a00451._UR1920,1080_.png"},
+  {title:"A Company Man", genre:"action", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/aa9c9639521d3f4095d24498407ecd8a8fc97412e5428f631a131f448bd8af9e.jpg"},
+  {title:"Confidential Assignment", genre:"action", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/cdacd3f924dc17bf17e5f3ed235517d1cd44562b56b7127e3fe50446daed24cb.jpg"},
+  {title:"The Villainess", genre:"action", type:"movie", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-DOHtIdZeg3xhYG0Knrv9PUZcZAVHswm-dA&s"},
+  {title:"Fabricated City", genre:"action", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/I/91GYeWQnxKL._AC_UF1000,1000_QL80_.jpg"},
+  {title:"The Berlin File", genre:"action", type:"movie", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2me8oKWr6WfLVZhuz8Wgo2eYQy1mO9HjsPA&s"},
+  {title:"Ashfall", genre:"action", type:"movie", lang:"ko", img:"https://upload.wikimedia.org/wikipedia/en/d/d2/Ashfall_Poster.jpg"},
+
+// KOREAN ACTION SERIES
+{title:"Vincenzo", genre:"action", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BNjA1YmJiNTMtMDc4OC00ZjlkLTgyMjctYzRmMWJhMmZhMjkyXkEyXkFqcGc@._V1_.jpg"},
+  {title:"Healer", genre:"action", type:"series", lang:"ko", img:"https://upload.wikimedia.org/wikipedia/en/e/e3/Healer_TV_series-poster.jpg"},
+  {title:"Taxi Driver", genre:"action", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/4a3ecd32d2d6889e6718e88bde09a86e4cbd0ab0eb9d90cfe01098a6a5a54af7.jpg"},
+  {title:"My Name", genre:"action", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BN2ZiZWU3MzMtNGM5OC00ZWVkLTkxNjUtMTYwZGU4MzgxYzk0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"The K2", genre:"action", type:"series", lang:"ko", img:"https://upload.wikimedia.org/wikipedia/en/a/a2/The_K2_%28%EB%8D%94_%EC%BC%80%EC%9D%B4%ED%88%AC%29.jpg"},
+  {title:"City Hunter", genre:"action", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/f6372c36e0be261bf6d5a2182da2bc062c6c42c20decf3ac2bb17dccfa83f063.jpg"},
+  {title:"Bad and Crazy", genre:"action", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/d2a628ea8391d87f149213a3b61500761a790578e487cda6db10da3d6f69ec7f.jpg"},
+  {title:"Snowdrop", genre:"action", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BMTVhYWIyYzMtYTUzYy00NTZlLWI2YjMtZTg3Yzk3YjczZWYzXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"IRIS", genre:"action", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BYmYyNzA0OGUtZjQxOC00MzdmLTk2NDQtZTQzNTk4ZDA4MjkxXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"Kingdom", genre:"action", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BYWQyMDQyYzItYWFhNi00YmViLTkwZTctY2M2NjEyNDJmNGQ5XkEyXkFqcGc@._V1_.jpg"},
+
+// KOREAN HORROR MOVIES
+{title:"Train to Busan", genre:"horror", type:"movie", lang:"ko", img:"https://image.tmdb.org/t/p/original/t8RfxLtdmuscLgfwWxnm8xx4Ary.jpg"},
+  {title:"The Wailing", genre:"horror", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BODkwMTgxNjA2NF5BMl5BanBnXkFtZTgwMDc0OTcwOTE@._V1_.jpg"},
+  {title:"Gonjiam: Haunted Asylum", genre:"horror", type:"movie", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoNqmOWIqayuSsPiLFKyZTWUwmv3z68urGvA&s"},
+  {title:"A Tale of Two Sisters", genre:"horror", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/62c9f38cca40bdd42ab9018ea7ba02355742193d53afd9d78562a404723f1345.jpg"},
+  {title:"The Call", genre:"horror", type:"movie", lang:"ko", img:"https://images.squarespace-cdn.com/content/v1/61b7a2c705855c798750b051/1679343291943-I0UFBKJ6FQ7HKV4MNLOA/the-call-2020-netflix-review-1.jpg"},
+  {title:"#Alive", genre:"horror", type:"movie", lang:"ko", img:"https://i.ytimg.com/vi/MuVYVhHPvPQ/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLDfqHw7dcjNan9C2wcBbXZzsZK9Rw"},
+  {title:"The Host", genre:"horror", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BMTQzYzI1MDAtYzVkOC00N2U1LThmNzYtNmYyNDg5MzQwYjEwXkEyXkFqcGc@._V1_.jpg"},
+  {title:"Whispering Corridors", genre:"horror", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BOTM0N2Q2MjAtNjFhZC00OWQwLWFlYjYtMDAxZDhhYmVmZDcwXkEyXkFqcGc@._V1_.jpg"},
+  {title:"The Closet", genre:"horror", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/I/81xcxhfAVeL._AC_UF1000,1000_QL80_.jpg"},
+  {title:"Metamorphosis", genre:"horror", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/26008aa7ab0c74cfc0ea31e41d56d24b2c0f90fe8a98b1f1a09a064903ecc2a9.jpg"},
+
+// KOREAN HORROR SERIES
+{title:"Kingdom", genre:"horror", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BYWQyMDQyYzItYWFhNi00YmViLTkwZTctY2M2NjEyNDJmNGQ5XkEyXkFqcGc@._V1_.jpg"},
+  {title:"All of Us Are Dead", genre:"horror", type:"series", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtk6x-M6UVnmeVRGKeR_7J1-foLarjVxcU8g&s"},
+  {title:"Sweet Home", genre:"horror", type:"series", lang:"ko", img:"https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p19174483_b_v8_aa.jpg"},
+  {title:"Hellbound", genre:"horror", type:"series", lang:"ko", img:"https://resizing.flixster.com/homu06V-moZiB6rYRFI7UZlawNc=/ems.cHJkLWVtcy1hc3NldHMvdHZzZXJpZXMvMzg4OGQ0MGEtOWE4NS00ZmQ2LWEwODgtNmVmN2NkMjJlNDFlLmpwZw=="},
+  {title:"Strangers from Hell", genre:"horror", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BMDI2Mjk2YmItNjBkOS00ZmE0LWI1ZTQtZjYxMzU3MmYxOWYwXkEyXkFqcGc@._V1_QL75_UX156_.jpg"},
+  {title:"The Guest", genre:"horror", type:"series", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfm5uvEfjD07Xvkyr8yj4GQRyR-IHSXBS-1g&s"},
+  {title:"Save Me", genre:"horror", type:"series", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSFHV_QHsCDvAh8AELMBlgSm5Mbpkp_-IaDYg&s"},
+  {title:"Dark Hole", genre:"horror", type:"series", lang:"ko", img:"https://1.vikiplatform.com/c/37771c/f5bf561c4a.jpg?x=b"},
+  {title:"Island", genre:"horror", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/e1678c05d132239808a048387f15a62e768cc2f74bab239f27ee48da1f04506f.jpg"},
+  {title:"Goedam", genre:"horror", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BNzc2NzgwNjktZDE5Zi00NDU5LWE5YTktMzllOTYxYThkYjJlXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+
+// KOREAN COMEDY MOVIES
+{title:"Extreme Job", genre:"comedy", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/94f5bab7e17d88bb38bd3596765eefb17fc0808b4ff66bc0ab3195b285302609.jpg"},
+  {title:"My Sassy Girl", genre:"comedy", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BMjBkMDY3NmEtMzZiOC00NTEwLTk1ZDgtYmMxM2I2ZjA3YmM1XkEyXkFqcGc@._V1_.jpg"},
+  {title:"Miss Granny", genre:"comedy", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BMTU5NTk5Mjk1M15BMl5BanBnXkFtZTgwNDU2MTEyMjE@._V1_.jpg"},
+  {title:"The Dude in Me", genre:"comedy", type:"movie", lang:"ko", img:"https://i.ytimg.com/vi/DR89bsoMySQ/sddefault.jpg"},
+  {title:"Sunny", genre:"comedy", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BMTk2MTgxMjgxNl5BMl5BanBnXkFtZTgwOTU2MTAzMjE@._V1_.jpg"},
+  {title:"Secret Zoo", genre:"comedy", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/67aea38dee1813f9e7762c0cd0d830f2b31928ced168975cbfd900dbaadc6b7a.jpg"},
+  {title:"Twenty", genre:"comedy", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/903157f2c1f4964244ac5308a895f2eb3c0cc2d222171c238b7f87ca69168d51.jpg"},
+  {title:"Start-Up", genre:"comedy", type:"movie", lang:"ko", img:"https://upload.wikimedia.org/wikipedia/en/9/91/Start-Up_%28film%29.jpg"},
+  {title:"Okay Madam", genre:"comedy", type:"movie", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BNWRjZjA3YjktZWI4OC00MDFkLWIzZTMtMGNhYjZmZjdlYzQ4XkEyXkFqcGc@._V1_.jpg"},
+  {title:"Luck-Key", genre:"comedy", type:"movie", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9NF-sGp0_GMF5E6EYPd2E3rScQe3LQwlNsQ&s"},
+
+// KOREAN COMEDY SERIES
+{title:"Welcome to Waikiki", genre:"comedy", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/S/pv-target-images/f22b4b8c8d5bd9cbd7116b70474835c09c9346597e879088b84e844fe9158c0f.jpg"},
+  {title:"Strong Girl Bong-soon", genre:"comedy", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BZTliMWVjYmYtNmQ2My00Y2UxLWJiZjQtNTg1OTk0OGE0M2IzXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg"},
+  {title:"Business Proposal", genre:"comedy", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BYWM2NTM4MTktNDFiNi00NTI3LThiZTgtZmJiZTQ2NzdhNDE3XkEyXkFqcGc@._V1_.jpg"},
+  {title:"Mr. Queen", genre:"comedy", type:"series", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT28jMeox3MVIuQTQEz625B-nPikIKJMfLNuQ&s"},
+  {title:"Fight for My Way", genre:"comedy", type:"series", lang:"ko", img:"https://upload.wikimedia.org/wikipedia/en/d/d4/Fight_For_My_Way_Poster.jpg"},
+  {title:"Reply 1988", genre:"comedy", type:"series", lang:"ko", img:"https://m.media-amazon.com/images/M/MV5BZDBiNDE1NzUtYmU0OS00YmUxLTljODUtOTczNDE3ZGQ0MmYzXkEyXkFqcGc@._V1_.jpg"},
+  {title:"The Sound of Your Heart", genre:"comedy", type:"series", lang:"ko", img:"https://play-lh.googleusercontent.com/proxy/ykXgMsCkY_d1C9NxXvJ1FCofTMJ1SyUrfBqdHZU0CVrbwfNbhb2n9GD6k6hAs4bjhkazvImnCUKJC2odlVKIJ_u2C4eQFHuYC0SSUx5DpEjXPPnBuElImpcmoY2U18t3WWVLV69IMproBSdKR7PFY3hktGXT9CeRak4Jtw"},
+  {title:"My Roommate is a Gumiho", genre:"comedy", type:"series", lang:"ko", img:"https://1.vikiplatform.com/c/37880c/8d865ce9de.jpg?x=b"},
+  {title:"Weightlifting Fairy Kim Bok-joo", genre:"comedy", type:"series", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7fKd4EXOf9NVN4QAFzO7JKHqkUWG-tvyO7Q&s"},
+  {title:"Goong", genre:"comedy", type:"series", lang:"ko", img:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-sX5l-0aInh8Ohb1_2khNK8AuGani8fcBVA&s"}
+
+
+];
+
+/* Filter Logic */
+function getMovies() {
+
+  const genre = document.getElementById("genre").value;
+  const type = document.getElementById("type").value;
+  const lang = document.getElementById("language").value;
+
+  const filtered = moviesDB.filter(m =>
+    m.genre === genre &&
+    m.type === type &&
+    m.lang === lang
+  );
+
+  const results = document.getElementById("results");
+  results.innerHTML = "";
+
+  if (filtered.length === 0) {
+    results.innerHTML = "<p>No movies found</p>";
+    return;
+  }
+
+  filtered.forEach(movie => {
+    results.innerHTML += `
+      <div class="movie-card">
+        <img src="${movie.img}">
+        <h3>${movie.title}</h3>
+        </div>
+    `;
+  });
+}
+
+</script>
+</body>
+</html>
+
+
+
